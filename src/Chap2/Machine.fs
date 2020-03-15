@@ -1,17 +1,8 @@
-/// SIMPLEソースコードの式を評価する抽象機械
 namespace UnderstandingComputation.Chap2
 
-type Machine =
-    { expr: Expr
-      env: Env }
-
-
+/// SIMPLEソースコードを評価する抽象機械
 [<RequireQualifiedAccess>]
 module Machine =
-
-    let init expr env =
-        { Machine.expr = expr
-          env = env }
 
     let inline inspect (code: ^a) = (^a: (static member Inspect: ^a -> string) code)
     let inline isReducible (code: ^a) = (^a: (static member IsReducible: ^a -> bool) code)
