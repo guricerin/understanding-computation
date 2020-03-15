@@ -1,39 +1,8 @@
-# FsTemplate
-Template for F# project, distributed under [MIT License](/LICENSE)
-
-## FsTemplate Usage
-1. Click the above [**Use this Template**] button in GitHub website.
-
-2. **Clone** your project
-    ```shell
-    $ git clone <URL>
-    $ cd <ProjectName>
-    ```
-3. **Setup** Template
-    ```shell
-    $ dotnet tool restore
-    $ dotnet fake build -t Setup # update tools and dependencies, remove sample projects
-    ```
-
-4. Change **CI Badges** in **[README.md](/README.md)**
-    - Replace `wraikny/FsTemplate` to `<OWNER>/<REPO>`
-    - Set your own AppVeyor badge ID
-    - **If you don't use a CI service, comment out it from the below table**.
-5. Create Your project: **[Create Project](#Create-Project)**
-6. Remove this **[FsTemplate Usage](#FsTemplate-Usage)** from here
-7.
-    ```shell
-    $ git commit --amend # as initial commit
-    ```
+# understanding-computation
 
 ## Requirements
 .NET Core 3.1  
 https://dotnet.microsoft.com/download  
-
-```shell
-$ dotnet --version
-3.1.100
-```
 
 ## CLI
 
