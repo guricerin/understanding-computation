@@ -11,7 +11,7 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 
-let testProjects = [ "Chap2.Test" ]
+let testProjects = [ "Chap2.Test"; "Chap3.Test" ]
 
 Target.create "Test" (fun _ ->
     [ for x in testProjects -> sprintf "tests/%s/bin/Release/**/%s.dll" x x ]
@@ -34,8 +34,7 @@ Target.create "Build" (fun _ -> !!"src/**/*.*proj" ++ "tests/**/*.*proj" |> Seq.
 Target.create "All" ignore
 
 "Clean" ==> "Build" ==> "Test" ==> "All"
-
-"Tool"
+//"Tool"
 "Tool" ==> "Setup"
 
 Target.runOrDefault "All"
