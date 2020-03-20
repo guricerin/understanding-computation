@@ -1,6 +1,9 @@
 #r "bin/Release/netstandard2.0/Chap2.dll"
 
 open UnderstandingComputation.Chap2
+open Expression
+open Statement
+open Machine
 
 // Machine.succPrint expr
 let inline show (x: ^a) = (^a: (static member Inspect: ^a -> string) x)

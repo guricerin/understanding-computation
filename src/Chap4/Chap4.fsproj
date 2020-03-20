@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="PDA.fs" />
+    <Compile Include="DPDA.fs" />
+    <Compile Include="NPDA.fs" />
+    <Compile Include="Lexer.fs" />
+    <Compile Include="Parser.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
