@@ -1,7 +1,7 @@
 module UnderstandingComputation.Chap2.ExpressionTest
 
 open Expecto
-open UnderstandingComputation.Chap2
+open UnderstandingComputation.Chap2.Expression
 
 [<Tests>]
 let ``reduce number`` =

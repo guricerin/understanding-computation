@@ -1,4 +1,7 @@
-namespace UnderstandingComputation.Chap2
+module UnderstandingComputation.Chap2.Machine
+
+open Expression
+open Statement
 
 /// SIMPLEソースコードを評価する抽象機械
 [<RequireQualifiedAccess>]
@@ -7,7 +10,6 @@ module Machine =
     let inline inspect (code: ^a) = (^a: (static member Inspect: ^a -> string) code)
     let inline isReducible (code: ^a) = (^a: (static member IsReducible: ^a -> bool) code)
     let inline reduce (code: ^a) (env: Env) = (^a: (static member Reduce: ^a * Env -> ^a * Env) (code, env))
-    let inline toRuby (code: ^a) = (^a: (static member ToRuby: ^a -> string) code)
 
     let inline print a (Env env) = sprintf "%s, %A" (inspect a) env |> printfn "%s"
 

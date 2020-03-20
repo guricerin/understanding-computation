@@ -1,4 +1,4 @@
-namespace UnderstandingComputation.Chap2
+module UnderstandingComputation.Chap2.Expression
 
 /// SIMPLEの式
 type Expr =

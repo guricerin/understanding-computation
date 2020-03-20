@@ -2,6 +2,9 @@ module UnderstandingComputation.Chap2.ParseTest
 
 open Expecto
 open UnderstandingComputation.Chap2
+open Expression
+open Statement
+open Parser
 
 [<Tests>]
 let ``parse while`` =

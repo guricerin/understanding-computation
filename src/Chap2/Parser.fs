@@ -1,4 +1,7 @@
-namespace UnderstandingComputation.Chap2
+module UnderstandingComputation.Chap2.Parser
+
+open Expression
+open Statement
 
 open FParsec
 

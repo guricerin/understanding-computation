@@ -1,4 +1,6 @@
-namespace UnderstandingComputation.Chap2
+module UnderstandingComputation.Chap2.Statement
+
+open Expression
 
 /// SIMPLEの文
 type Stmt =

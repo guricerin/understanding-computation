@@ -96,3 +96,69 @@ module NFAFreeMove =
             let actual = NFA.accepts "aaaaaa" nfa
             Expect.isTrue actual ""
         }
+
+module NFASimulation =
+    let ls =
+        [ NFARule.create 1 (Some 'a') 1
+          NFARule.create 1 (Some 'a') 2
+          NFARule.create 1 None 2
+          NFARule.create 2 (Some 'b') 3
+          NFARule.create 3 (Some 'b') 1
+          NFARule.create 3 None 2 ]
+
+    let rulebook = NFARulebook.ofList ls
+
+    [<Tests>]
+    let ``nfa simulation`` =
+        test "nfa simulation" {
+            let orgNFA = NFA.create [ 1 ] [ 3 ] rulebook
+            let simulation = NFASimulation.create orgNFA
+
+            let nfa = NFASimulation.toNFA (States.ofList []) simulation
+            let actual = (NFA.freeMove nfa).currents
+            let expect = States.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+
+            let nfa = NFASimulation.toNFA (States.ofList [ 2 ]) simulation
+            let actual = (NFA.freeMove nfa).currents
+            let expect = States.ofList [ 2 ]
+            Expect.equal actual expect ""
+
+            let nfa = NFASimulation.toNFA (States.ofList [ 3 ]) simulation
+            let actual = (NFA.freeMove nfa).currents
+            let expect = States.ofList [ 2; 3 ]
+            Expect.equal actual expect ""
+
+            let nfa = NFASimulation.toNFA (States.ofList [ 2; 3 ]) simulation
+            let nfa = NFA.readChar (Some 'b') nfa
+            let actual = (NFA.freeMove nfa).currents
+            let expect = States.ofList [ 1; 2; 3 ]
+            Expect.equal actual expect ""
+        }
+
+    [<Tests>]
+    let ``nfa simulation nextStates`` =
+        test "nfa simulation nextStates" {
+            let orgNFA = NFA.create [ 1 ] [ 3 ] rulebook
+            let simulation = NFASimulation.create orgNFA
+
+            let actual = NFASimulation.nextStates (States.ofList [ 1; 2 ]) 'a' simulation
+            let expect = States.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (States.ofList [ 1; 2 ]) 'b' simulation
+            let expect = States.ofList [ 3; 2 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (States.ofList [ 2; 3 ]) 'b' simulation
+            let expect = States.ofList [ 1; 3; 2 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (States.ofList [ 1; 2; 3 ]) 'b' simulation
+            let expect = States.ofList [ 1; 3; 2 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (States.ofList [ 1; 2; 3 ]) 'a' simulation
+            let expect = States.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+        }

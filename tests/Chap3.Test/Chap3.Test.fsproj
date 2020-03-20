@@ -9,6 +9,7 @@
     <Compile Include="DFATest.fs" />
     <Compile Include="NFATest.fs" />
     <Compile Include="PatternTest.fs" />
+    <Compile Include="PatternParserTest.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

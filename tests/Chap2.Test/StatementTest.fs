@@ -2,6 +2,8 @@ module UnderstandingComputation.Chap2.StatementTest
 
 open Expecto
 open UnderstandingComputation.Chap2
+open Expression
+open Statement
 
 [<Tests>]
 let ``reduce assign`` =
