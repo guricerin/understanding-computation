@@ -39,11 +39,11 @@ let ``lcterm replace`` =
         let expect = "x"
         Expect.equal (expr.ToString()) expect ""
 
-        let expr' = LCTerm.replace "x" (LCF("y", LCV("y"))) expr
+        let expr' = LCExpr.replace "x" (LCF("y", LCV("y"))) expr
         let expect = "-> y { y }"
         Expect.equal (expr'.ToString()) expect ""
 
-        let expr' = LCTerm.replace "z" (LCF("y", LCV("y"))) expr
+        let expr' = LCExpr.replace "z" (LCF("y", LCV("y"))) expr
         let expect = "x"
         Expect.equal (expr'.ToString()) expect ""
 
@@ -51,11 +51,11 @@ let ``lcterm replace`` =
         let expect = "a[b][c][b]"
         Expect.equal (expr.ToString()) expect ""
 
-        let expr' = LCTerm.replace "a" (LCV("x")) expr
+        let expr' = LCExpr.replace "a" (LCV("x")) expr
         let expect = "x[b][c][b]"
         Expect.equal (expr'.ToString()) expect ""
 
-        let expr' = LCTerm.replace "b" (LCF("x", LCV("x"))) expr
+        let expr' = LCExpr.replace "b" (LCF("x", LCV("x"))) expr
         let expect = "a[-> x { x }][c][-> x { x }]"
         Expect.equal (expr'.ToString()) expect ""
     }
@@ -67,11 +67,11 @@ let ``replace free variable (not bound variable)`` =
         let expect = "-> y { x[y] }"
         Expect.equal (expr.ToString()) expect ""
 
-        let expr' = LCTerm.replace "x" (LCV("z")) expr
+        let expr' = LCExpr.replace "x" (LCV("z")) expr
         let expect = "-> y { z[y] }"
         Expect.equal (expr'.ToString()) expect ""
 
-        let expr' = LCTerm.replace "y" (LCV("z")) expr
+        let expr' = LCExpr.replace "y" (LCV("z")) expr
         let expect = "-> y { x[y] }"
         Expect.equal (expr'.ToString()) expect ""
 
@@ -79,11 +79,11 @@ let ``replace free variable (not bound variable)`` =
         let expect = "x[y][-> y { y[x] }]"
         Expect.equal (expr.ToString()) expect ""
 
-        let expr' = LCTerm.replace "x" (LCV "z") expr
+        let expr' = LCExpr.replace "x" (LCV "z") expr
         let expect = "z[y][-> y { y[z] }]" // 2つのxはどちらも元の式で自由変数
         Expect.equal (expr'.ToString()) expect ""
 
-        let expr' = LCTerm.replace "y" (LCV "z") expr
+        let expr' = LCExpr.replace "y" (LCV "z") expr
         let expect = "x[z][-> y { y[x] }]" // 最初のyだけが自由変数
         Expect.equal (expr'.ToString()) expect ""
     }
@@ -99,7 +99,7 @@ let ``lcterm call`` =
         let expect = "-> z { z }"
         Expect.equal (arg.ToString()) expect ""
 
-        let actual = LCTerm.call arg func
+        let actual = LCExpr.call arg func
         let expect = "-> y { -> z { z }[y] }"
         Expect.equal (actual.ToString()) expect ""
     }
@@ -108,7 +108,7 @@ let ``lcterm call`` =
 let ``lcterm reduce`` =
     test "lcterm reduce" {
         let mutable expr = LCC(LCC(add, one), one)
-        let expr = LCTerm.eval expr
+        let expr = LCExpr.eval expr
         let expect = "-> p { -> x { p[-> p { -> x { p[x] } }[p][x]] } }"
         Expect.equal (expr.ToString()) expect ""
 
@@ -117,7 +117,7 @@ let ``lcterm reduce`` =
         let expect = "-> p { -> x { p[-> p { -> x { p[x] } }[p][x]] } }[inc][zero]"
         Expect.equal (expr.ToString()) expect ""
 
-        let expr = LCTerm.eval expr
+        let expr = LCExpr.eval expr
         let expect = "inc[inc[zero]]"
         Expect.equal (expr.ToString()) expect ""
     }

@@ -13,18 +13,18 @@ module ULCParser =
     let ws = spaces
     let str_ws s = pstring s .>> ws
 
-    let plcterm, plctermRef: Parser<LCTerm> * Parser<LCTerm> ref = createParserForwardedToRef()
+    let plcexpr, plcexprRef: Parser<LCExpr> * Parser<LCExpr> ref = createParserForwardedToRef()
 
     /// [a-z]+
     let psymbol = many1 (satisfy isAsciiLower) |>> String.Concat
 
-    let pvar: Parser<LCTerm> = psymbol |>> LCV
+    let pvar: Parser<LCExpr> = psymbol |>> LCV
 
     let pfunc =
         parse {
             do! ws >>. skipString "->" >>. ws
             let! param = psymbol .>> ws
-            let! body = between (str_ws "{") (str_ws "}") (ws >>. plcterm .>> ws)
+            let! body = between (str_ws "{") (str_ws "}") (ws >>. plcexpr .>> ws)
             let lcf = LCF(param, body)
             return lcf
         }
@@ -32,17 +32,17 @@ module ULCParser =
     let pcall =
         parse {
             let! first = pvar <|> pfunc
-            let! rest = between (pchar '[') (pchar ']') plcterm
+            let! rest = between (pchar '[') (pchar ']') plcexpr
             let lcc = LCC(first, rest)
             return lcc
         }
 
-    do plctermRef := choice
+    do plcexprRef := choice
                          [ attempt pcall
                            attempt pvar
                            attempt pfunc ]
 
-    let parse (code: string): LCTerm =
-        match run (ws >>. plcterm .>> ws .>> eof) code with
+    let parse (code: string): LCExpr =
+        match run (ws >>. plcexpr .>> ws .>> eof) code with
         | Success(res, _, _) -> res
         | Failure(msg, _, _) -> failwithf "%s" msg

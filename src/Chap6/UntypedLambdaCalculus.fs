@@ -1,13 +1,13 @@
 ﻿module UnderstandingComputation.Chap6.UntypedLambdaCalculus
 
-/// ラムダ計算の項
-type LCTerm =
+/// ラムダ計算の式
+type LCExpr =
     /// 識別子
     | LCV of name: string
     /// 無名関数
-    | LCF of param: string * body: LCTerm
+    | LCF of param: string * body: LCExpr
     /// 関数適用
-    | LCC of left: LCTerm * right: LCTerm
+    | LCC of left: LCExpr * right: LCExpr
 
     override self.ToString() =
         match self with
@@ -16,17 +16,17 @@ type LCTerm =
         | LCC(left, right) -> sprintf "%s[%s]" (left.ToString()) (right.ToString())
 
 [<RequireQualifiedAccess>]
-module LCTerm =
+module LCExpr =
 
     /// 式の中の特定の変数を別の式に置き換える
-    let rec replace name replacement term =
-        match term with
+    let rec replace name replacement expr =
+        match expr with
         | LCV(name') ->
-            if name' = name then replacement else term
+            if name' = name then replacement else expr
         // 関数本体の自由変数のみを置き換える。束縛変数（関数の引数）は置き換えない
         | LCF(param, body) ->
             if param = name then
-                term
+                expr
             else
                 let body' = replace name replacement body
                 LCF(param, body')
@@ -36,10 +36,10 @@ module LCTerm =
             LCC(left', right')
 
     /// 関数本体の変数を実引数に置き換え、関数を評価する
-    let call arg term =
-        match term with
+    let call arg expr =
+        match expr with
         | LCF(param, body) -> replace param arg body
-        | _ -> invalidArg "term" "LCV and LCC are not callable"
+        | _ -> invalidArg "expr" "LCV and LCC are not callable"
 
     let isCallable =
         function
@@ -60,9 +60,9 @@ module LCTerm =
             | true, _ -> LCC(reduce left, right)
             | _, true -> LCC(left, reduce right)
             | _ -> left |> call right // leftはLCFのはず
-        | _ -> invalidArg "term" "LCV and LCF are not reducible"
+        | _ -> invalidArg "expr" "LCV and LCF are not reducible"
 
-    let eval term =
+    let eval expr =
         let rec loop cur =
             if isReducible cur then
                 cur
@@ -70,4 +70,4 @@ module LCTerm =
                 |> loop
             else
                 cur
-        loop term
+        loop expr

@@ -14,7 +14,7 @@ let ``ulc parse`` =
         Expect.equal expr expect ""
         Expect.equal (expr.ToString()) code ""
 
-        let expr = LCTerm.reduce expr
+        let expr = LCExpr.reduce expr
         let expect = "-> y { y }[-> y { y }]"
         Expect.equal (expr.ToString()) expect ""
     }
