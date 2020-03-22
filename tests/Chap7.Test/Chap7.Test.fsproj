@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="PRFTest.fs" />
     <Compile Include="SKITest.fs" />
+    <Compile Include="TagSystemTest.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

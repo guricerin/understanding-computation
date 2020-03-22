@@ -120,7 +120,7 @@ module SKIExpr =
             let left' = asAFunctionOf name left
             let right' = asAFunctionOf name right
             SKICall(SKICall(S, left'), right')
-        | Iota -> invalidArg "expr" "Iota is not as-a-functon-of"
+        | Iota -> invalidArg "expr" "Iota is not dealed as-a-functon-of"
 
 [<RequireQualifiedAccess>]
 module ULCConverter =

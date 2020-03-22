@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="PartialRecursiveFunction.fs" />
     <Compile Include="SKICombinatorCalculus.fs" />
+    <Compile Include="TagSystem.fs" />
   </ItemGroup>
 
   <ItemGroup>
