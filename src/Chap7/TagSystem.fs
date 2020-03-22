@@ -1,3 +1,5 @@
+/// テープヘッドを動かす代わりに、文字列の末尾への新たな文字の追加、先頭からの文字の削除を繰り返す
+
 module UnderstandingComputation.Chap7.TagSystem
 
 type TagRule =
@@ -12,14 +14,13 @@ module TagRule =
           appends = appends }
 
     /// 入力に対して規則を適用できるか
-    let appliesTo (input: string) rule =
-        if input = "" then false else input.[0] = rule.first
+    let appliesTo (input: string) rule = input <> "" && input.[0] = rule.first
 
     /// 規則を適用（入力の末尾に文字列を追加）
     let follow (input: string) rule = input + rule.appends
 
 type TagRulebook =
-    { deletionNum: int
+    { deletionNum: int // 先頭からの削除数
       rules: TagRule list }
 
 [<RequireQualifiedAccess>]
