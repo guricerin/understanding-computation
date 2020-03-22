@@ -14,20 +14,13 @@ $ dotnet tool restore
 ### Build
 ```shell
 $ dotnet fake build # Build all projects as Release
-$ # or
-$ dotnet build --project src/SampleApp [-c {Debug|Release}]
-```
-
-### Run
-```shell
-$ dotnet run --project src/SampleApp [-c {Debug|Release}]
 ```
 
 ### Tests
 ```shell
 $ dotnet fake build -t Test
 $ #or
-$ dotnet run --project tests/SampleTest
+$ dotnet run --project <path-to-test-project>
 ```
 
 ## References
@@ -73,13 +66,6 @@ $ echo -e 'FSharp.Core\nExpecto\nExpecto.FsCheck' > tests/SampleTest/paket.refer
 $ paket install # Add reference of Paket to .fsproj file
 ```
 and then, Add **Project Name** to [build.fsx](/build.fsx).
-
-### Create Solution
-```shell
-$ dotnet new sln
-$ dotnet sln add src/SampleApp
-$ dotnet sln add src/SampleLib
-```
 
 ### Update Tool
 ```shell

@@ -6,6 +6,11 @@
 
   <ItemGroup>
     <Compile Include="PartialRecursiveFunction.fs" />
+    <Compile Include="SKICombinatorCalculus.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chap6\Chap6.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 

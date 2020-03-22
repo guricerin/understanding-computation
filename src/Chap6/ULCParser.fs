@@ -20,6 +20,7 @@ module ULCParser =
 
     let pvar: Parser<LCExpr> = psymbol |>> LCV
 
+    /// -> param { body }
     let pfunc =
         parse {
             do! ws >>. skipString "->" >>. ws
@@ -29,6 +30,7 @@ module ULCParser =
             return lcf
         }
 
+    /// first[rest]
     let pcall =
         parse {
             let! first = pvar <|> pfunc

@@ -1,4 +1,4 @@
-module UnderstandingComputation.Chap7.PartialRecursiveFunctionTest
+module UnderstandingComputation.Chap7.PRFTest
 
 open Expecto
 open UnderstandingComputation.Chap7
@@ -42,3 +42,34 @@ module PRFSample =
     let divide x y =
         let f n = subtract (increment x) (multiply y (increment n))
         minimize f
+
+
+    [<Tests>]
+    let ``prf samples`` =
+        test "prf samples" {
+            let two = increment (increment zero)
+            let three = increment two
+            let actual = add two three
+            Expect.equal actual 5 ""
+
+            let six = multiply two three
+            Expect.equal six 6 ""
+
+            let actual = decrement six
+            Expect.equal actual 5 ""
+
+            let actual = subtract six two
+            Expect.equal actual 4 ""
+
+            let actual = subtract two six
+            Expect.equal actual 0 ""
+
+            let actual = divide six two
+            Expect.equal actual 3 ""
+
+            let ten = increment (multiply three three)
+            Expect.equal ten 10 ""
+
+            let actual = divide ten two
+            Expect.equal actual 5 ""
+        }

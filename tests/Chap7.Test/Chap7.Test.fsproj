@@ -6,12 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="PartialRecursiveFunctionTest.fs" />
+    <Compile Include="PRFTest.fs" />
+    <Compile Include="SKITest.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Chap7\Chap7.fsproj" />
+    <ProjectReference Include="..\..\src\Chap6\Chap6.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 
