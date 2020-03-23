@@ -57,8 +57,8 @@ module Stmt =
                 If(cond, conseq, alt), env
             | _ ->
                 match cond with
-                | Boolean true -> conseq, env
-                | Boolean false -> alt, env
+                | Expr.Boolean true -> conseq, env
+                | Expr.Boolean false -> alt, env
                 | _ -> invalidArg "If" "条件式がbooleanではない"
         | Sequence(first, second) ->
             match first with
@@ -77,22 +77,22 @@ module Stmt =
             let expr, _ = Expr.evaluate expr env
             let env = Env.add name expr env
             expr, env
-        | DoNothing -> Boolean true, env // 適当にbool値を返すことにする
+        | DoNothing -> Expr.Boolean true, env // 適当にbool値を返すことにする
         | If(cond, conseq, alt) ->
             match Expr.evaluate cond env with
-            | Boolean true, _ -> evaluate conseq env
-            | Boolean false, _ -> evaluate alt env
+            | Expr.Boolean true, _ -> evaluate conseq env
+            | Expr.Boolean false, _ -> evaluate alt env
             | _ -> invalidArg "If" "条件式がbooleanではない"
         | Sequence(first, second) ->
             let _, env = evaluate first env
             evaluate second env
         | While(cond, body) ->
             match Expr.evaluate cond env with
-            | Boolean true, _ ->
+            | Expr.Boolean true, _ ->
                 // 環境を更新して再帰
                 let _, env = evaluate body env
                 evaluate stmt env
-            | Boolean false, env as res -> res
+            | Expr.Boolean false, env as res -> res
             | _ -> invalidArg "While" "条件式がbooleanではない"
 
     let rec toRuby stmt =

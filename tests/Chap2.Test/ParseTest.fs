@@ -11,15 +11,18 @@ let ``parse while`` =
     test "parse while" {
         let code = "while (x < 5) { x = x * 3 }"
         let stmt = Parsing.parse code
-        let expect = While(LessThan(Variable "x", Number 5), Assign("x", Multiply(Variable "x", Number 3)))
+        let expect =
+            While
+                (Expr.LessThan(Expr.Variable "x", Expr.Number 5),
+                 Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
         Expect.equal stmt expect ""
         Expect.equal "<<while (x < 5) { x = x * 3 }>>" (Stmt.inspect stmt) ""
 
-        let env = Env.ofList [ ("x", Number 1) ]
+        let env = Env.ofList [ ("x", Expr.Number 1) ]
         let expr, env = Stmt.evaluate stmt env
-        Expect.equal expr (Boolean false) ""
+        Expect.equal expr (Expr.Boolean false) ""
         let actual = Env.tryFind "x" env
-        let expect = Some(Number 9)
+        let expect = Some(Expr.Number 9)
         Expect.equal actual expect ""
 
         let actual = Stmt.toRuby stmt

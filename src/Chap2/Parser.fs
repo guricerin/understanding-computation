@@ -20,7 +20,7 @@ module Parsing =
     let pnumliteral: Parser<Expr> =
         parse {
             let num = pint32
-            let! num = num |>> Number
+            let! num = num |>> Expr.Number
             return num
         }
 
@@ -28,7 +28,7 @@ module Parsing =
         parse {
             let b = pstring "true" <|> pstring "false"
             let! b = b |>> fun x ->
-                         if x = "true" then Boolean true else Boolean false
+                         if x = "true" then Expr.Boolean true else Expr.Boolean false
             return b
         }
 
@@ -40,7 +40,7 @@ module Parsing =
     let pvariable: Parser<Expr> =
         parse {
             let var = pident
-            let! var = var |>> Variable
+            let! var = var |>> Expr.Variable
             return var
         }
 
@@ -53,15 +53,15 @@ module Parsing =
     let terma = (pvalue .>> ws) <|> between (strWS "(") (strWS ")") parithmetic
 
     oppa.TermParser <- terma
-    oppa.AddOperator(InfixOperator("+", ws, 1, Associativity.Left, (fun x y -> Add(x, y))))
-    oppa.AddOperator(InfixOperator("*", ws, 2, Associativity.Left, (fun x y -> Multiply(x, y))))
+    oppa.AddOperator(InfixOperator("+", ws, 1, Associativity.Left, (fun x y -> Expr.Add(x, y))))
+    oppa.AddOperator(InfixOperator("*", ws, 2, Associativity.Left, (fun x y -> Expr.Multiply(x, y))))
 
     let oppc = OperatorPrecedenceParser<Expr, unit, unit>()
     let pcomparison = oppc.ExpressionParser
     let termc = (parithmetic .>> ws) <|> between (strWS "(") (strWS ")") pcomparison
 
     oppc.TermParser <- termc
-    oppc.AddOperator(InfixOperator("<", ws, 2, Associativity.Left, (fun x y -> LessThan(x, y))))
+    oppc.AddOperator(InfixOperator("<", ws, 2, Associativity.Left, (fun x y -> Expr.LessThan(x, y))))
 
     let pexpr, pexprRef: Parser<Expr> * Parser<Expr> ref = createParserForwardedToRef()
 
