@@ -12,9 +12,9 @@ let ``parse while`` =
         let code = "while (x < 5) { x = x * 3 }"
         let stmt = Parsing.parse code
         let expect =
-            While
+            Stmt.While
                 (Expr.LessThan(Expr.Variable "x", Expr.Number 5),
-                 Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
+                 Stmt.Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
         Expect.equal stmt expect ""
         Expect.equal "<<while (x < 5) { x = x * 3 }>>" (Stmt.inspect stmt) ""
 

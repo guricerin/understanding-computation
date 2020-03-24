@@ -32,6 +32,8 @@ module Env =
 
     let tryFind name (Env env) = Map.tryFind name env
 
+exception UnboundVariableException of string
+
 [<RequireQualifiedAccess>]
 module Expr =
 
@@ -49,7 +51,7 @@ module Expr =
     /// 式を簡約し、新たな式を返す
     let rec reduce (expr: Expr) (env: Env) =
         match expr with
-        | Expr.Number _ -> invalidArg "Numer" "値は簡約できない"
+        | Expr.Number _ -> invalidArg "Numer" "value is not reducible"
         | Expr.Add(Expr.Number l, Expr.Number r) -> Expr.Number(l + r), env
         | Expr.Add(l, r) ->
             match isReducible l, isReducible r with
@@ -70,7 +72,7 @@ module Expr =
                 let r, env = reduce r env
                 Expr.Multiply(l, r), env
             | _ -> invalidArg "Multiply" "unreachable!"
-        | Expr.Boolean _ -> invalidArg "Boolean" "値は簡約できない"
+        | Expr.Boolean _ -> invalidArg "Boolean" "value is not reducible"
         | Expr.LessThan(Expr.Number l, Expr.Number r) -> Expr.Boolean(l < r), env
         | Expr.LessThan(l, r) ->
             match isReducible l, isReducible r with
@@ -84,11 +86,12 @@ module Expr =
         | Expr.Variable name ->
             match Env.tryFind name env with
             | Some v -> v, env
-            | _ ->
-                let msg = sprintf "%sは未定義変数" name
-                invalidArg "Valiable: " msg
+            | _ -> raise <| UnboundVariableException(name)
 
-    let private num (Expr.Number n) = n
+    let private num n =
+        match n with
+        | Expr.Number n -> n
+        | _ -> invalidArg "n" "expected Number"
 
     /// ビッグステップ意味論
     /// 抽象構文木を走査し、値を返す
@@ -133,7 +136,7 @@ module Expr =
             sprintf "-> e { (%s).call(e) < (%s).call(e) }" l r
 
 
-// for srtp
+// for SRTP
 type Expr with
     static member inline Inspect(x: Expr) = Expr.inspect x
     static member inline IsReducible(x: Expr) = Expr.isReducible x

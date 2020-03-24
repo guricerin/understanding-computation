@@ -1,4 +1,8 @@
 # understanding-computation
+The code of [Understanding Computation](https://computationbook.com/), re-implemented by F#
+
+## Thanks for Template
+https://github.com/wraikny/FsTemplate
 
 ## Requirements
 .NET Core 3.1  

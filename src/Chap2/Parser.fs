@@ -73,7 +73,7 @@ module Parsing =
     let pstmt, pstmtRef: Parser<Stmt> * Parser<Stmt> ref = createParserForwardedToRef()
 
     let passign: Parser<Stmt> =
-        pipe3 (pidentWS) (strWS "=") (parithmetic) (fun ident wsString expr -> Assign(ident, expr))
+        pipe3 (pidentWS) (strWS "=") (parithmetic) (fun ident wsString expr -> Stmt.Assign(ident, expr))
 
     let pcond = attempt pcomparison <|> attempt pvalue
 
@@ -83,10 +83,11 @@ module Parsing =
             let! cond = pcond |> between (strWS "(") (strWS ")")
             do! ws
             let! body = pstmt |> between (strWS "{") (strWS "}")
-            return While(cond, body)
+            return Stmt.While(cond, body)
         }
 
-    let psequence: Parser<Stmt> = pipe3 (pstmt) (strWS ";") (pstmt) (fun first _ second -> Sequence(first, second))
+    let psequence: Parser<Stmt> =
+        pipe3 (pstmt) (strWS ";") (pstmt) (fun first _ second -> Stmt.Sequence(first, second))
 
     pstmtRef := choice
                     [ attempt pwhile

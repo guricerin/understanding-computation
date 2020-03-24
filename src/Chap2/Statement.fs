@@ -3,6 +3,7 @@ module UnderstandingComputation.Chap2.Statement
 open Expression
 
 /// SIMPLEの文
+[<RequireQualifiedAccess>]
 type Stmt =
     /// プログラムの実行が正しく終了したことを示す
     | DoNothing
@@ -35,58 +36,58 @@ module Stmt =
 
     let isReducible =
         function
-        | DoNothing -> false
+        | Stmt.DoNothing -> false
         | _ -> true
 
-    let rec reduce stmt (env: Env) =
+    let rec reduce stmt (env: Env): Stmt * Env =
         match stmt with
-        | DoNothing -> invalidArg "DoNothing" "unreachable!"
-        | Assign(name, expr) ->
+        | Stmt.DoNothing -> invalidArg "DoNothing" "unreachable!"
+        | Stmt.Assign(name, expr) ->
             match Expr.isReducible expr with
             | true ->
                 let expr, _ = Expr.reduce expr env
-                Assign(name, expr), env
+                Stmt.Assign(name, expr), env
             | _ ->
                 // 環境を更新
                 let env = Env.add name expr env
-                (DoNothing, env)
-        | If(cond, conseq, alt) ->
+                Stmt.DoNothing, env
+        | Stmt.If(cond, conseq, alt) ->
             match Expr.isReducible cond with
             | true ->
                 let cond, _ = Expr.reduce cond env
-                If(cond, conseq, alt), env
+                Stmt.If(cond, conseq, alt), env
             | _ ->
                 match cond with
                 | Expr.Boolean true -> conseq, env
                 | Expr.Boolean false -> alt, env
                 | _ -> invalidArg "If" "条件式がbooleanではない"
-        | Sequence(first, second) ->
+        | Stmt.Sequence(first, second) ->
             match first with
-            | DoNothing -> second, env
+            | Stmt.DoNothing -> second, env
             | _ ->
                 let first, env = reduce first env
-                Sequence(first, second), env
-        | While(cond, body) ->
-            let conseq, alt = Sequence(body, stmt), DoNothing
-            If(cond, conseq, alt), env
+                Stmt.Sequence(first, second), env
+        | Stmt.While(cond, body) ->
+            let conseq, alt = Stmt.Sequence(body, stmt), Stmt.DoNothing
+            Stmt.If(cond, conseq, alt), env
 
-    let rec evaluate stmt (env: Env) =
+    let rec evaluate stmt (env: Env): Expr * Env =
         match stmt with
-        | Assign(name, expr) ->
+        | Stmt.Assign(name, expr) ->
             // 環境を更新
             let expr, _ = Expr.evaluate expr env
             let env = Env.add name expr env
             expr, env
-        | DoNothing -> Expr.Boolean true, env // 適当にbool値を返すことにする
-        | If(cond, conseq, alt) ->
+        | Stmt.DoNothing -> Expr.Boolean true, env // 適当にbool値を返すことにする
+        | Stmt.If(cond, conseq, alt) ->
             match Expr.evaluate cond env with
             | Expr.Boolean true, _ -> evaluate conseq env
             | Expr.Boolean false, _ -> evaluate alt env
             | _ -> invalidArg "If" "条件式がbooleanではない"
-        | Sequence(first, second) ->
+        | Stmt.Sequence(first, second) ->
             let _, env = evaluate first env
             evaluate second env
-        | While(cond, body) ->
+        | Stmt.While(cond, body) ->
             match Expr.evaluate cond env with
             | Expr.Boolean true, _ ->
                 // 環境を更新して再帰
@@ -97,22 +98,22 @@ module Stmt =
 
     let rec toRuby stmt =
         match stmt with
-        | DoNothing -> "-> e { e }"
-        | Assign(name, expr) ->
+        | Stmt.DoNothing -> "-> e { e }"
+        | Stmt.Assign(name, expr) ->
             let expr = Expr.toRuby expr
             sprintf "-> e { e.merge({ :%s => (%s).call(e) }) }" name expr
-        | If(cond, conseq, alt) ->
+        | Stmt.If(cond, conseq, alt) ->
             let cond, conseq, alt = Expr.toRuby cond, toRuby conseq, toRuby alt
             sprintf "-> e { if (%s).call(e) then (%s).call(e) else (%s).call(e) end }" cond conseq alt
-        | Sequence(first, second) ->
+        | Stmt.Sequence(first, second) ->
             let first, second = toRuby first, toRuby second
             sprintf "-> e { (%s).call((%s).call(e)) }" second first
-        | While(cond, body) ->
+        | Stmt.While(cond, body) ->
             let cond, body = Expr.toRuby cond, toRuby body
             sprintf "-> e { while (%s).call(e); e = (%s).call(e); end; e }" cond body
 
 
-// for srtp
+// for SRTP
 type Stmt with
     static member inline Inspect(x: Stmt) = Stmt.inspect x
     static member inline IsReducible(x: Stmt) = Stmt.isReducible x

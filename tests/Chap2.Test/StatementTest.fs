@@ -8,7 +8,7 @@ open Statement
 [<Tests>]
 let ``reduce assign`` =
     test "reduce assign" {
-        let stmt = Assign("x", Expr.Add(Expr.Variable "x", Expr.Number 1))
+        let stmt = Stmt.Assign("x", Expr.Add(Expr.Variable "x", Expr.Number 1))
         Expect.equal "<<x = x + 1>>" (Stmt.inspect stmt) ""
         Expect.isTrue (Stmt.isReducible stmt) ""
 
@@ -29,7 +29,7 @@ let ``reduce assign`` =
 [<Tests>]
 let ``reduce if`` =
     test "reduce if" {
-        let stmt = If(Expr.Variable "x", Assign("y", Expr.Number 1), Assign("y", Expr.Number 2))
+        let stmt = Stmt.If(Expr.Variable "x", Stmt.Assign("y", Expr.Number 1), Stmt.Assign("y", Expr.Number 2))
         Expect.equal "<<if (x) { y = 1 } else { y = 2 }>>" (Stmt.inspect stmt) ""
 
         let env = Env.ofList [ ("x", Expr.Boolean true) ]
@@ -50,9 +50,9 @@ let ``reduce if`` =
 let ``reduce sequence`` =
     test "reduce sequence" {
         let stmt =
-            Sequence
-                (Assign("x", Expr.Add(Expr.Number 1, Expr.Number 1)),
-                 Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 3)))
+            Stmt.Sequence
+                (Stmt.Assign("x", Expr.Add(Expr.Number 1, Expr.Number 1)),
+                 Stmt.Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 3)))
         Expect.equal "<<x = 1 + 1; y = x + 3>>" (Stmt.inspect stmt) ""
 
         let env = Env.empty
@@ -85,9 +85,9 @@ let ``reduce sequence`` =
 let ``reduce while`` =
     test "reduce while" {
         let stmt =
-            While
+            Stmt.While
                 (Expr.LessThan(Expr.Variable "x", Expr.Number 5),
-                 Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
+                 Stmt.Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
         Expect.equal "<<while (x < 5) { x = x * 3 }>>" (Stmt.inspect stmt) ""
 
         let env = Env.ofList [ ("x", Expr.Number 1) ]
@@ -185,9 +185,9 @@ let ``reduce while`` =
 let ``eval sequence`` =
     test "eval sequence" {
         let stmt =
-            Sequence
-                (Assign("x", Expr.Add(Expr.Number 1, Expr.Number 1)),
-                 Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 3)))
+            Stmt.Sequence
+                (Stmt.Assign("x", Expr.Add(Expr.Number 1, Expr.Number 1)),
+                 Stmt.Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 3)))
         Expect.equal "<<x = 1 + 1; y = x + 3>>" (Stmt.inspect stmt) ""
 
         let env = Env.empty
@@ -205,9 +205,9 @@ let ``eval sequence`` =
 let ``eval while`` =
     test "eval while" {
         let stmt =
-            While
+            Stmt.While
                 (Expr.LessThan(Expr.Variable "x", Expr.Number 5),
-                 Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
+                 Stmt.Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
         Expect.equal "<<while (x < 5) { x = x * 3 }>>" (Stmt.inspect stmt) ""
 
         let env = Env.ofList [ ("x", Expr.Number 1) ]
@@ -221,15 +221,15 @@ let ``eval while`` =
 [<Tests>]
 let ``toRuby stmt`` =
     test "toRuby stmt" {
-        let stmt = Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 1))
+        let stmt = Stmt.Assign("y", Expr.Add(Expr.Variable "x", Expr.Number 1))
         let actual = Stmt.toRuby stmt
         let expect = "-> e { e.merge({ :y => (-> e { (-> e { e[:x] }).call(e) + (-> e { 1 }).call(e) }).call(e) }) }"
         Expect.equal actual expect ""
 
         let stmt =
-            While
+            Stmt.While
                 (Expr.LessThan(Expr.Variable "x", Expr.Number 5),
-                 Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
+                 Stmt.Assign("x", Expr.Multiply(Expr.Variable "x", Expr.Number 3)))
         let actual = Stmt.toRuby stmt
         let expect =
             "-> e { while (-> e { (-> e { e[:x] }).call(e) < (-> e { 5 }).call(e) }).call(e); e = (-> e { e.merge({ :x => (-> e { (-> e { e[:x] }).call(e) * (-> e { 3 }).call(e) }).call(e) }) }).call(e); end; e }"
