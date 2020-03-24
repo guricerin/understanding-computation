@@ -21,16 +21,16 @@ module NFATest =
     [<Tests>]
     let ``nfa rulebook`` =
         test "nfa rulebook" {
-            let actual = NFARulebook.nextStates (States.ofList [ 1 ]) (Some 'b') rulebook
-            let expect = States.ofList [ 1; 2 ]
+            let actual = NFARulebook.nextStates (Set.ofList [ 1 ]) (Some 'b') rulebook
+            let expect = Set.ofList [ 1; 2 ]
             Expect.equal actual expect ""
 
-            let actual = NFARulebook.nextStates (States.ofList [ 1; 2 ]) (Some 'a') rulebook
-            let expect = States.ofList [ 1; 3 ]
+            let actual = NFARulebook.nextStates (Set.ofList [ 1; 2 ]) (Some 'a') rulebook
+            let expect = Set.ofList [ 1; 3 ]
             Expect.equal actual expect ""
 
-            let actual = NFARulebook.nextStates (States.ofList [ 1; 3 ]) (Some 'b') rulebook
-            let expect = States.ofList [ 1; 2; 4 ]
+            let actual = NFARulebook.nextStates (Set.ofList [ 1; 3 ]) (Some 'b') rulebook
+            let expect = Set.ofList [ 1; 2; 4 ]
             Expect.equal actual expect ""
         }
 
@@ -74,12 +74,12 @@ module NFAFreeMove =
     [<Tests>]
     let ``nfa free move`` =
         test "nfa free move" {
-            let actual = NFARulebook.nextStates (States.ofList [ 1 ]) None rulebook
-            let expect = States.ofList [ 2; 4 ]
+            let actual = NFARulebook.nextStates (Set.ofList [ 1 ]) None rulebook
+            let expect = Set.ofList [ 2; 4 ]
             Expect.equal actual expect ""
 
-            let actual = NFARulebook.followFreeMoves (States.ofList [ 1 ]) rulebook
-            let expect = States.ofList [ 1; 2; 4 ]
+            let actual = NFARulebook.followFreeMoves (Set.ofList [ 1 ]) rulebook
+            let expect = Set.ofList [ 1; 2; 4 ]
             Expect.equal actual expect ""
         }
 
@@ -107,3 +107,12 @@ module NFASimulation =
           NFARule.create 3 None 2 ]
 
     let rulebook = NFARulebook.ofList ls
+
+    [<Tests>]
+    let ``nfa design current`` =
+        test "nfa design current" {
+            let design = NFADesign.create 1 [ 3 ] rulebook
+            let actual = (NFADesign.toNFA design).currents
+            let expect = Set.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+        }

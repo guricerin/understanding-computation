@@ -8,11 +8,6 @@ open DFA
 
 type States = Set<State>
 
-[<RequireQualifiedAccess>]
-module States =
-
-    let ofList = Set.ofList
-
 /// オートマトンの規則
 type NFARule =
     { current: State
@@ -99,8 +94,8 @@ module NFA =
 
     let create curs accepts rulebook =
         let nfa =
-            { NFA.currents = States.ofList curs
-              accepts = States.ofList accepts
+            { NFA.currents = Set.ofList curs
+              accepts = Set.ofList accepts
               rulebook = rulebook }
         freeMove nfa
 
@@ -129,7 +124,7 @@ module NFADesign =
 
     let create start accepts rulebook =
         { NFADesign.start = start
-          accepts = States.ofList accepts
+          accepts = Set.ofList accepts
           rulebook = rulebook }
 
     let toNFA design =

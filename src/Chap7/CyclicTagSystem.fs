@@ -1,8 +1,9 @@
 module UnderstandingComputation.Chap7.CyclicTagSystem
 
 open System
-open FSharpx.Collections
+open FSharpx.Collections // Queue
 
+[<RequireQualifiedAccess>]
 type CyclicChar =
     | Zero
     | One
@@ -12,7 +13,7 @@ type CyclicChar =
         | Zero -> '0'
         | One -> '1'
 
-    static member ofChar (ch) =
+    static member ofChar (ch: char) =
         match ch with
         | '0' -> Zero
         | '1' -> One
@@ -32,7 +33,7 @@ module CyclicStr =
 
     let toStr (ls: CyclicStr) =
         ls
-        |> List.map (fun c -> c.toChar)
+        |> List.map (fun ch -> ch.toChar)
         |> String.Concat
 
 type CTagRule =
@@ -63,7 +64,7 @@ module CTagRulebook =
     let create rules = Queue.ofList rules
 
     /// 規則を適用可能か？
-    let appliesTo (cstr: CyclicStr) = List.length cstr >= DeletionNum && List.head cstr = One
+    let appliesTo (cstr: CyclicStr) = List.length cstr >= DeletionNum && List.head cstr = CyclicChar.One
 
     /// 規則集を循環させつつ、先頭の規則と共に返す
     let cycle (rulebook: CTagRulebook): CTagRule * CTagRulebook =
@@ -142,7 +143,7 @@ type CTagEncoder(system: TagSystem) =
     member self.EncodeChar(ch: char): string =
         seq {
             for e in _alphabet do
-                if ch = e then yield One.toChar else yield Zero.toChar
+                if ch = e then yield CyclicChar.One.toChar else yield CyclicChar.Zero.toChar
         }
         |> String.Concat
 
