@@ -1,11 +1,6 @@
 module UnderstandingComputation.Chap3.Automaton
 
-type State =
-    | State of int
-
-    override self.ToString() =
-        match self with
-        | State s -> s.ToString()
+type State = int
 
 /// オートマトンの規則
 type FARule =
@@ -20,10 +15,10 @@ type FARule =
 [<RequireQualifiedAccess>]
 module FARule =
 
-    let create (cur: int) (input: char) (next: int) =
-        { FARule.current = State cur
+    let create (cur: State) (input: char) (next: int) =
+        { FARule.current = cur
           input = input
-          next = State next }
+          next = next }
 
     /// 規則を適用できるか
     let appliesTo (state: State) (input: char) rule = rule.current = state && rule.input = input

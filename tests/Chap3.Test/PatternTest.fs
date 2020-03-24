@@ -16,18 +16,18 @@ let ``pattern to string`` =
 [<Tests>]
 let ``pattern to nfa`` =
     test "pattern to nfa" {
-        let nfa = Pattern.toNFA Empty
-        let actual = NFA.accepts "" nfa
+        let design = PatternConverter(Empty).ToNFADesign()
+        let actual = NFADesign.accepts "" design
         Expect.isTrue actual ""
-        let actual = NFA.accepts "a" nfa
+        let actual = NFADesign.accepts "a" design
         Expect.isFalse actual ""
 
-        let nfa = Pattern.toNFA (Literal 'a')
-        let actual = NFA.accepts "" nfa
+        let design = PatternConverter(Literal 'a').ToNFADesign()
+        let actual = NFADesign.accepts "" design
         Expect.isFalse actual ""
-        let actual = NFA.accepts "a" nfa
+        let actual = NFADesign.accepts "a" design
         Expect.isTrue actual ""
-        let actual = NFA.accepts "b" nfa
+        let actual = NFADesign.accepts "b" design
         Expect.isFalse actual ""
     }
 
@@ -35,14 +35,14 @@ let ``pattern to nfa`` =
 [<Tests>]
 let ``empty pattern`` =
     test "empty pattern" {
-        let actual = Pattern.matches "a" Empty
+        let actual = PatternConverter(Empty).Matches "a"
         Expect.isFalse actual ""
     }
 
 [<Tests>]
 let ``literal pattern`` =
     test "literal pattern" {
-        let actual = Pattern.matches "a" (Literal 'a')
+        let actual = PatternConverter(Literal 'a').Matches "a"
         Expect.isTrue actual ""
     }
 
@@ -51,11 +51,12 @@ let ``concatenate pattern`` =
     test "concatenate pattern" {
         let pattern = Concat(Literal 'a', Literal 'b')
         Expect.equal (pattern.ToString()) "/ab/" ""
-        let actual = Pattern.matches "a" pattern
+        let pattern = PatternConverter(pattern)
+        let actual = pattern.Matches "a"
         Expect.isFalse actual ""
-        let actual = Pattern.matches "ab" pattern
+        let actual = pattern.Matches "ab"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "abc" pattern
+        let actual = pattern.Matches "abc"
         Expect.isFalse actual ""
     }
 
@@ -64,11 +65,12 @@ let ``choose pattern`` =
     test "choose pattern" {
         let pattern = Choose(Literal 'a', Literal 'b')
         Expect.equal (pattern.ToString()) "/a|b/" ""
-        let actual = Pattern.matches "a" pattern
+        let pattern = PatternConverter(pattern)
+        let actual = pattern.Matches "a"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "b" pattern
+        let actual = pattern.Matches "b"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "c" pattern
+        let actual = pattern.Matches "c"
         Expect.isFalse actual ""
     }
 
@@ -77,13 +79,14 @@ let ``repeat pattern`` =
     test "repeat matches" {
         let pattern = Repeat(Literal 'a')
         Expect.equal (pattern.ToString()) "/a*/" ""
-        let actual = Pattern.matches "" pattern
+        let pattern = PatternConverter(pattern)
+        let actual = pattern.Matches ""
         Expect.isTrue actual ""
-        let actual = Pattern.matches "a" pattern
+        let actual = pattern.Matches "a"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "aaaa" pattern
+        let actual = pattern.Matches "aaaa"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "b" pattern
+        let actual = pattern.Matches "b"
         Expect.isFalse actual ""
     }
 
@@ -92,18 +95,19 @@ let ``complex pattern`` =
     test "complex pattern" {
         let pattern = Repeat(Concat(Literal 'a', Choose(Empty, Literal 'b')))
         Expect.equal (pattern.ToString()) "/(a(|b))*/" ""
-        let actual = Pattern.matches "" pattern
+        let pattern = PatternConverter(pattern)
+        let actual = pattern.Matches ""
         Expect.isTrue actual ""
-        let actual = Pattern.matches "a" pattern
+        let actual = pattern.Matches "a"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "ab" pattern
+        let actual = pattern.Matches "ab"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "aba" pattern
+        let actual = pattern.Matches "aba"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "abab" pattern
+        let actual = pattern.Matches "abab"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "abaab" pattern
+        let actual = pattern.Matches "abaab"
         Expect.isTrue actual ""
-        let actual = Pattern.matches "abba" pattern
+        let actual = pattern.Matches "abba"
         Expect.isFalse actual ""
     }

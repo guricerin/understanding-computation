@@ -19,14 +19,14 @@ module DFATest =
     [<Tests>]
     let ``dfa rulebook`` =
         test "dfa rulebook" {
-            let actual = DFARulebook.nextState (State 1) 'a' rulebook
-            let expect = State 2
+            let actual = DFARulebook.nextState 1 'a' rulebook
+            let expect = 2
             Expect.equal actual expect ""
-            let actual = DFARulebook.nextState (State 1) 'b' rulebook
-            let expect = State 1
+            let actual = DFARulebook.nextState 1 'b' rulebook
+            let expect = 1
             Expect.equal actual expect ""
-            let actual = DFARulebook.nextState (State 2) 'b' rulebook
-            let expect = State 3
+            let actual = DFARulebook.nextState 2 'b' rulebook
+            let expect = 3
             Expect.equal actual expect ""
         }
 

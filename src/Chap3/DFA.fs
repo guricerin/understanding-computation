@@ -35,8 +35,8 @@ type DFA =
 module DFA =
 
     let create state accepts rulebook =
-        { DFA.current = State state
-          accepts = List.map State accepts
+        { DFA.current = state
+          accepts = accepts
           rulebook = rulebook }
 
     /// 現在は受理状態か
@@ -52,8 +52,24 @@ module DFA =
         let f d c = readChar c d
         Seq.fold f dfa str
 
+type DFADesign =
+    { start: State
+      accepts: State list
+      rulebook: DFARulebook }
+
+[<RequireQualifiedAccess>]
+module DFADesign =
+
+    let create start accepts rulebook =
+        { DFADesign.start = start
+          accepts = accepts
+          rulebook = rulebook }
+
+    let toDFA design = DFA.create design.start design.accepts design.rulebook
+
     /// 入力文字列を受理するか
-    let accepts str dfa =
-        dfa
-        |> readString str
-        |> isAccepting
+    let accepts str design =
+        design
+        |> toDFA
+        |> DFA.readString str
+        |> DFA.isAccepting

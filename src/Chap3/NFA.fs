@@ -1,6 +1,7 @@
 module UnderstandingComputation.Chap3.NFA
 
 open Automaton
+open DFA
 
 /// 非決定性有限オートマトン (Nondeterministic Finite Machine)
 /// 状態と入力の組み合わせに対して、必ず規則を1つだけもつ
@@ -10,10 +11,7 @@ type States = Set<State>
 [<RequireQualifiedAccess>]
 module States =
 
-    let ofList ls: States =
-        ls
-        |> List.map State
-        |> Set.ofList
+    let ofList = Set.ofList
 
 /// オートマトンの規則
 type NFARule =
@@ -34,9 +32,9 @@ type NFARule =
 module NFARule =
 
     let create cur input next =
-        { NFARule.current = State cur
+        { NFARule.current = cur
           input = input
-          next = State next }
+          next = next }
 
     /// 規則を適用できるか
     let appliesTo state c (rule: NFARule) = rule.current = state && rule.input = c
@@ -121,34 +119,70 @@ module NFA =
         let f n c = readChar (Some c) n
         Seq.fold f nfa str
 
-    let accepts str nfa =
-        nfa
-        |> readString str
-        |> isAccepting
+type NFADesign =
+    { start: State
+      accepts: States
+      rulebook: NFARulebook }
+
+[<RequireQualifiedAccess>]
+module NFADesign =
+
+    let create start accepts rulebook =
+        { NFADesign.start = start
+          accepts = States.ofList accepts
+          rulebook = rulebook }
+
+    let toNFA design =
+        { NFA.currents = Set.ofList [ design.start ]
+          accepts = design.accepts
+          rulebook = design.rulebook }
+        |> NFA.freeMove
+
+    let accepts str design =
+        design
+        |> toNFA
+        |> NFA.readString str
+        |> NFA.isAccepting
+
+    /// 任意の状態を指定してNFAを作成
+    let toNFAForSimulation start design =
+        { NFA.currents = Set.singleton start
+          accepts = design.accepts
+          rulebook = design.rulebook }
+        |> NFA.freeMove
 
 type NFASimulation =
-    { orgNFA: NFA }
+    { design: NFADesign }
 
 [<RequireQualifiedAccess>]
 module NFASimulation =
 
-    let create nfa = { NFASimulation.orgNFA = nfa }
+    let create nfaDesign = { NFASimulation.design = nfaDesign }
 
-    let toNFA curs simulation =
-        // 与えられた現在の状態が空なら元のNFAの開始状態を使う
-        let curs =
-            if Set.isEmpty curs then simulation.orgNFA.currents else curs
+    let nextStates state ch simulation =
+        NFADesign.toNFAForSimulation state simulation.design
+        |> NFA.readChar (Some ch)
+        |> fun nfa -> nfa.currents
 
-        let nfa = { simulation.orgNFA with currents = curs }
-        NFA.freeMove nfa
+    let rulesFor state simulation =
+        let alphabets = simulation.design.rulebook |> NFARulebook.alphabet
 
-    let nextStates states c simulation =
-        let nfa = toNFA states simulation
-        let nfa = NFA.readChar (Some c) nfa
-        nfa.currents
+        let f ch =
+            nextStates state ch simulation
+            |> Set.map (fun next -> FARule.create state ch next)
+            |> Set.toList
+        List.collect f alphabets |> Set.ofList // collect: flatmap
 
-// let rulesFor state simulation =
-//     let alphabets = NFARulebook.alphabet simulation.orgNFA.rulebook
-//     let f c =
-//         {FARule.current = state; input = c; next}
-//     List.map (fun c -> FARule.create state c (nextStates states c simulation))
+    let rec discoverStatesAndRules states simulation =
+        let rules = Set.map (fun state -> rulesFor state simulation) states |> Set.unionMany
+        let moreStates = Set.map FARule.follow rules
+        if Set.isSubset moreStates states
+        then states, Set.toList rules
+        else discoverStatesAndRules (Set.union states moreStates) simulation
+
+    let toDFADesign simulation =
+        let starts = (NFADesign.toNFA simulation.design).currents
+        let states, rules = discoverStatesAndRules starts simulation
+        let f state = NFADesign.toNFAForSimulation state simulation.design |> NFA.isAccepting
+        let accepts = Set.filter f states |> Set.toList
+        Set.map (fun start -> DFADesign.create start accepts (DFARulebook.ofList rules)) starts

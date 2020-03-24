@@ -16,7 +16,7 @@ type Pattern =
     /// a*
     | Repeat of Pattern
 
-    member self.Precedence =
+    member private self.Precedence =
         match self with
         | Empty -> 3
         | Literal _ -> 3
@@ -24,10 +24,10 @@ type Pattern =
         | Choose _ -> 0
         | Repeat _ -> 2
 
-    member self.Bracket(outer: Pattern) =
+    member private self.Bracket(outer: Pattern) =
         if self.Precedence < outer.Precedence then self.Tos |> sprintf "(%s)" else self.Tos
 
-    member self.Tos =
+    member private self.Tos =
         let f (pat: Pattern) = pat.Bracket(self)
         match self with
         | Empty -> ""
@@ -38,92 +38,82 @@ type Pattern =
 
     override self.ToString() = self.Tos |> sprintf "/%s/"
 
-[<RequireQualifiedAccess>]
-module Pattern =
+type PatternConverter(pattern: Pattern) =
+    let _pattern = pattern
+    let mutable _state = 0
 
-    /// NFAとその受理状態の中で番号が最もでかいやつの組を返す
-    let rec toNFA' start pattern =
-        match pattern with
-        | Empty ->
-            let rulebook = NFARulebook.ofList []
-            NFA.create [ start ] [ start ] rulebook, start
-        | Literal c ->
-            let accept = start + 1
-            let rule = NFARule.create start (Some c) accept
-            let rulebook = NFARulebook.ofList [ rule ]
-            NFA.create [ start ] [ accept ] rulebook, accept
-        | Concat(first, second) ->
-            let fnfa, faccept = toNFA' start first
-            let snfa, saccept = toNFA' faccept second
-            let rules = NFARulebook.append fnfa.rulebook snfa.rulebook
-
-            // firstの受理状態とsecondの開始状態を自由移動で繋げる
-            let f (state: State) =
-                { NFARule.current = state
-                  input = None
-                  next = State faccept }
-            let extraRules =
-                Set.map f fnfa.accepts
-                |> Set.toList
-                |> NFARulebook.ofList
-
-            let start = States.ofList [ start ] // [start] か fnfa.currents のどっちだ？
-            let accepts = snfa.accepts
-            let rulebook = NFARulebook.append rules extraRules
-            { NFA.currents = start
-              accepts = accepts
-              rulebook = rulebook }, saccept
-        | Choose(first, second) ->
-            let fstart = start
-            let fnfa, faccept = toNFA' fstart first
-            let snfa, saccept = toNFA' faccept second
-
-            let accepts = Set.union fnfa.accepts snfa.accepts
-            let rules = NFARulebook.append fnfa.rulebook snfa.rulebook
-
-            // 新たな開始状態を作り、そこからfirstの開始状態とsecondの開始状態への分岐を繋げる
-            let extraRules =
-                [ NFARule.create start None fstart
-                  NFARule.create start None faccept ]
-                |> NFARulebook.ofList
-
-            let rulebook = NFARulebook.append rules extraRules
-
-            { NFA.currents = States.ofList [ start ]
-              accepts = accepts
-              rulebook = rulebook }, saccept
-        | Repeat pattern ->
-            // 元のNFA
-            let patstart = start
-            let patnfa, pataccept = toNFA' patstart pattern
-            // 受理状態でもある新たな開始状態
-            let newstart = pataccept + 1
-            let accepts = Set.union patnfa.accepts (Set.singleton (State newstart))
-
-            // 元のNFAの受理状態を元の開始状態に繋げるための自由移動
-            let f (state: State) =
-                { NFARule.current = state
-                  input = None
-                  next = State patstart }
-            let extraRules =
-                Set.map f patnfa.accepts
-                |> Set.toList
-                |> List.append [ NFARule.create newstart None patstart ] // 新たな開始状態を元の開始状態に繋げる自由移動
-                |> NFARulebook.ofList
-
-            let rulebook = NFARulebook.append patnfa.rulebook extraRules
-            { NFA.currents = States.ofList [ newstart ]
-              accepts = accepts
-              rulebook = rulebook }, newstart
-
-    /// 等価なNFAに変換
-    let toNFA pattern =
-        let start = 0
-        let res, _ = toNFA' start pattern
+    /// 原著では新しい状態を適当なメモリアドレスから取得している
+    /// ここでは代わりにクラスの中に可変な値を閉じ込め、それをインクリさせて呼び出し元に返す方針を取る
+    member private self.NewState() =
+        let res = _state
+        _state <- _state + 1
         res
 
-    /// 指定の文字列にマッチするか
-    let matches str pattern =
-        pattern
-        |> toNFA
-        |> NFA.accepts str
+    member private self.ToNFADesign(pattern: Pattern) =
+        match pattern with
+        | Empty ->
+            let start = self.NewState()
+            let accepts = [ start ]
+            let rulebook = NFARulebook.ofList []
+            NFADesign.create start accepts rulebook
+        | Literal c ->
+            let start, accept = self.NewState(), self.NewState()
+            let rule = NFARule.create start (Some c) accept
+            let rulebook = NFARulebook.ofList [ rule ]
+            NFADesign.create start [ accept ] rulebook
+        | Concat(first, second) ->
+            let firstNFADesign = self.ToNFADesign first
+            let secondNFADesign = self.ToNFADesign second
+            let start = firstNFADesign.start
+            let accepts = secondNFADesign.accepts
+            let rules = NFARulebook.append firstNFADesign.rulebook secondNFADesign.rulebook
+            // firstの受理状態とsecondの開始状態を自由移動で繋げる
+            let extraRules =
+                Set.map (fun state -> NFARule.create state None secondNFADesign.start) firstNFADesign.accepts
+                |> Set.toList
+                |> NFARulebook.ofList
+
+            let rulebook = NFARulebook.append rules extraRules
+            { NFADesign.start = start
+              accepts = accepts
+              rulebook = rulebook }
+        | Choose(first, second) ->
+            let firstNFADesign = self.ToNFADesign first
+            let secondNFADesign = self.ToNFADesign second
+            let start = self.NewState()
+            let accepts = Set.union firstNFADesign.accepts secondNFADesign.accepts
+            let rules = NFARulebook.append firstNFADesign.rulebook secondNFADesign.rulebook
+            // 新たな開始状態を作り、そこからfirstの開始状態とsecondの開始状態へと分岐させる
+            let extraRules =
+                [ NFARule.create start None firstNFADesign.start
+                  NFARule.create start None secondNFADesign.start ]
+                |> NFARulebook.ofList
+
+            let rulebook = NFARulebook.append rules extraRules
+            { NFADesign.start = start
+              accepts = accepts
+              rulebook = rulebook }
+        | Repeat pattern ->
+            let patNFADesign = self.ToNFADesign pattern
+            // 受理状態でもある新たな開始状態
+            let start = self.NewState()
+            let accepts = Set.union patNFADesign.accepts (Set.singleton start)
+            let rules = patNFADesign.rulebook
+
+            let extraRules =
+                patNFADesign.accepts
+                |> Set.map (fun accept -> NFARule.create accept None patNFADesign.start) // 元の受理状態と元の開始状態を自由移動で繋げる（循環）
+                |> Set.toList
+                |> List.append [ NFARule.create start None patNFADesign.start ] // 新たな開始状態と元の開始状態を自由移動で繋げる
+                |> NFARulebook.ofList
+
+            let rulebook = NFARulebook.append rules extraRules
+            { NFADesign.start = start
+              accepts = accepts
+              rulebook = rulebook }
+
+    member self.ToNFADesign() =
+        do _state <- 0
+        self.ToNFADesign(_pattern)
+
+    member self.Matches(str: string): bool = self.ToNFADesign() |> NFADesign.accepts str
