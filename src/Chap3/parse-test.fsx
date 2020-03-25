@@ -1,7 +1,11 @@
-module UnderstandingComputation.Chap3.PatternParser
+#r "../../packages/FParsec/lib/netstandard2.0/FParsecCS.dll"
+#r "../../packages/FParsec/lib/netstandard2.0/FParsec.dll"
+#r "bin/Release/netstandard2.0/Chap3.dll"
+
+// dllをロードする順番: FParsecCS -> FParsec
 
 open FParsec
-open Pattern
+open UnderstandingComputation.Chap3.Pattern
 
 type Parser<'a> = Parser<'a, unit>
 
@@ -11,7 +15,11 @@ module PatternParser =
     // let ppattern, ppatternRef: Parser<Pattern> * Parser<Pattern> ref = createParserForwardedToRef()
 
     /// Empty
-    let pempty: Parser<Pattern> = parse { return Empty }
+    let pempty: Parser<Pattern> =
+        parse {
+            do! skipString ""
+            return Empty
+        }
 
     /// Literal ['a' - 'z']
     let pliteral: Parser<Pattern> = satisfy isAsciiLower |>> Literal
@@ -63,3 +71,20 @@ module PatternParser =
         match run (pconcatorempty .>> eof) input with
         | Success(res, _, _) -> res
         | Failure(msg, _, _) -> failwithf "%s" msg
+
+let main() =
+    let parse = PatternParser.parse
+    let inline put s = printfn "%A" s
+    parse "a" |> put
+    parse "" |> put
+    parse "a*" |> put
+    parse "|b" |> put
+    parse "a|b" |> put
+    parse "a|(b|c)" |> put
+    parse "(a|b)" |> put
+    parse "(a|b)*" |> put
+    parse "(a*|b*)" |> put
+    parse "ab" |> put
+    parse "(a(|b))*" |> put
+
+main()

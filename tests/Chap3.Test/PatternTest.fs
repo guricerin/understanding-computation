@@ -31,7 +31,6 @@ let ``pattern to nfa`` =
         Expect.isFalse actual ""
     }
 
-
 [<Tests>]
 let ``empty pattern`` =
     test "empty pattern" {
