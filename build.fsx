@@ -11,7 +11,8 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 
-let testProjects = [ "Chap2.Test"; "Chap3.Test" ]
+let testProjects =
+    [ "Chap2.Test"; "Chap3.Test"; "Chap4.Test"; "Chap5.Test"; "Chap6.Test"; "Chap7.Test"; "Chap8.Test"; "Chap9.Test" ]
 
 Target.create "Test" (fun _ ->
     [ for x in testProjects -> sprintf "tests/%s/bin/Release/**/%s.dll" x x ]

@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Chap9\Chap9.fsproj" />
     <ProjectReference Include="..\..\src\Chap2\Chap2.fsproj" />
+    <ProjectReference Include="..\..\src\Chap9\Chap9.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 
