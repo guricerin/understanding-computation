@@ -8,17 +8,14 @@ type Parser<'a> = Parser<'a, unit>
 [<RequireQualifiedAccess>]
 module PatternParser =
 
-    // let ppattern, ppatternRef: Parser<Pattern> * Parser<Pattern> ref = createParserForwardedToRef()
-
-    /// Empty
     let pempty: Parser<Pattern> = parse { return Empty }
 
-    /// Literal ['a' - 'z']
+    /// ['a' - 'z']
     let pliteral: Parser<Pattern> = satisfy isAsciiLower |>> Literal
 
     let ppattern, ppatternRef: Parser<Pattern> * Parser<Pattern> ref = createParserForwardedToRef()
 
-    let pconcat =
+    let pconcatorempty =
         parse {
             let! pats = many1 ppattern
             let res =
@@ -29,7 +26,7 @@ module PatternParser =
             return res
         }
 
-    let pbrackets = between (pstring "(") (pstring ")") pconcat
+    let pbrackets = between (pstring "(") (pstring ")") pconcatorempty
 
     let prepeat =
         parse {
@@ -56,8 +53,6 @@ module PatternParser =
                             attempt prepeat
                             attempt pbrackets
                             pliteral ]
-
-    let pconcatorempty = pconcat <|> pempty
 
     let parse (input: string) =
         match run (pconcatorempty .>> eof) input with
