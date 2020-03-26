@@ -6,7 +6,7 @@ open Automaton
 /// 状態と入力の組み合わせに対して、必ず規則を1つだけもつ
 
 /// 決定性有限オートマトンの規則集
-type DFARulebook = DFARulebook of FARule list
+type DFARulebook<'a> = DFARulebook of FARule<'a> list
 
 [<RequireQualifiedAccess>]
 module DFARulebook =
@@ -21,15 +21,14 @@ module DFARulebook =
         | None -> invalidArg "rulebook" "適用可能な規則なし"
 
     /// 遷移関数
-    let nextState (state: State) (input: char) (rulebook: DFARulebook) =
-        ruleFor state input rulebook |> FARule.follow
+    let nextState state input rulebook = ruleFor state input rulebook |> FARule.follow
 
 
 /// 決定性有限オートマトン
-type DFA =
-    { current: State
-      accepts: State list
-      rulebook: DFARulebook }
+type DFA<'a> =
+    { current: 'a
+      accepts: 'a list
+      rulebook: DFARulebook<'a> }
 
 [<RequireQualifiedAccess>]
 module DFA =
@@ -52,10 +51,10 @@ module DFA =
         let f d c = readChar c d
         Seq.fold f dfa str
 
-type DFADesign =
-    { start: State
-      accepts: State list
-      rulebook: DFARulebook }
+type DFADesign<'a> =
+    { start: 'a
+      accepts: 'a list
+      rulebook: DFARulebook<'a> }
 
 [<RequireQualifiedAccess>]
 module DFADesign =

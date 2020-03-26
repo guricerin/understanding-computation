@@ -3,6 +3,7 @@ module UnderstandingComputation.Chap3.NFATest
 open Expecto
 open UnderstandingComputation.Chap3
 open Automaton
+open DFA
 open NFA
 
 module NFATest =
@@ -107,6 +108,8 @@ module NFASimulation =
           NFARule.create 3 None 2 ]
 
     let rulebook = NFARulebook.ofList ls
+    let nfaDesign = NFADesign.create 1 [ 3 ] rulebook
+    let simulation = NFASimulation.create nfaDesign
 
     [<Tests>]
     let ``nfa design current`` =
@@ -115,4 +118,101 @@ module NFASimulation =
             let actual = (NFADesign.toNFA design).currents
             let expect = Set.ofList [ 1; 2 ]
             Expect.equal actual expect ""
+
+            let actual = (NFADesign.toNFAForSimulation (Set.ofList [ 2 ]) design).currents
+            let expect = Set.ofList [ 2 ]
+            Expect.equal actual expect ""
+
+            let nfa = NFADesign.toNFAForSimulation (Set.ofList [ 2; 3 ]) design
+            let actual = nfa.currents
+            let expect = Set.ofList [ 2; 3 ]
+            Expect.equal actual expect ""
+            let nfa = NFA.readChar (Some 'b') nfa
+            let actual = nfa.currents
+            let expect = Set.ofList [ 1; 2; 3 ]
+            Expect.equal actual expect ""
+        }
+
+    [<Tests>]
+    let ``next states`` =
+        test "next state" {
+
+            let actual = NFASimulation.nextStates (Set.ofList [ 1; 2 ]) 'a' simulation
+            let expect = Set.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (Set.ofList [ 1; 2 ]) 'b' simulation
+            let expect = Set.ofList [ 2; 3 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (Set.ofList [ 3; 2 ]) 'b' simulation
+            let expect = Set.ofList [ 1; 2; 3 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (Set.ofList [ 1; 3; 2 ]) 'b' simulation
+            let expect = Set.ofList [ 1; 2; 3 ]
+            Expect.equal actual expect ""
+
+            let actual = NFASimulation.nextStates (Set.ofList [ 1; 3; 2 ]) 'a' simulation
+            let expect = Set.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+        }
+
+    [<Tests>]
+    let ``rule for`` =
+        test "rule for" {
+
+            let actual = NFASimulation.rulesFor (Set.ofList [ 1; 2 ]) simulation
+            let expect = "[#<FARule set [1; 2] --a--> set [1; 2]>; #<FARule set [1; 2] --b--> set [2; 3]>]"
+            Expect.equal (actual.ToString()) expect ""
+            let actual = NFASimulation.rulesFor (Set.ofList [ 3; 2 ]) simulation
+            let expect = "[#<FARule set [2; 3] --a--> set []>; #<FARule set [2; 3] --b--> set [1; 2; 3]>]"
+            Expect.equal (actual.ToString()) expect ""
+        }
+
+    [<Tests>]
+    let ``discover states and rules`` =
+        test "discover states and rules" {
+            let start = (NFADesign.toNFA nfaDesign).currents
+            let states, rules = NFASimulation.discoverStatesAndRules (Set.ofList [ start ]) simulation
+
+            let states = Set.toList states
+            Expect.equal (List.length states) 4 ""
+            let actual = List.item 0 states
+            let expect = Set.ofList []
+            Expect.equal actual expect ""
+            let actual = List.item 1 states
+            let expect = Set.ofList [ 1; 2 ]
+            Expect.equal actual expect ""
+            let actual = List.item 2 states
+            let expect = Set.ofList [ 3; 1; 2 ]
+            Expect.equal actual expect ""
+            let actual = List.item 3 states
+            let expect = Set.ofList [ 3; 2 ]
+            Expect.equal actual expect ""
+
+            let expect =
+                [ FARule.create (Set.ofList [ 1; 2 ]) 'a' (Set.ofList [ 1; 2 ])
+                  FARule.create (Set.ofList [ 1; 2 ]) 'b' (Set.ofList [ 3; 2 ])
+                  FARule.create (Set.ofList [ 3; 2 ]) 'a' (Set.ofList [])
+                  FARule.create (Set.ofList [ 3; 2 ]) 'b' (Set.ofList [ 1; 2; 3 ])
+                  FARule.create (Set.ofList []) 'a' (Set.ofList [])
+                  FARule.create (Set.ofList []) 'b' (Set.ofList [])
+                  FARule.create (Set.ofList [ 1; 2; 3 ]) 'a' (Set.ofList [ 1; 2 ])
+                  FARule.create (Set.ofList [ 1; 2; 3 ]) 'b' (Set.ofList [ 1; 2; 3 ]) ]
+                |> List.sort
+            Expect.equal rules expect ""
+        }
+
+    [<Tests>]
+    let ``convert nfa to dfa`` =
+        test "convert nfa to dfa" {
+
+            let design = NFASimulation.toDFADesign simulation
+            let actual = DFADesign.accepts "aaa" design
+            Expect.isFalse actual ""
+            let actual = DFADesign.accepts "aab" design
+            Expect.isTrue actual ""
+            let actual = DFADesign.accepts "bbbabb" design
+            Expect.isTrue actual ""
         }
